@@ -1,0 +1,194 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { invoke } from '@tauri-apps/api/tauri';
+import { ChevronDown } from 'lucide-react';
+
+interface Config {
+  prefix: string;
+  split: string;
+  command: string;
+  ignore_prefix: boolean;
+  on_copy_mode: OnCopyMode;
+  skip_url: boolean; 
+}
+
+enum OnCopyMode {
+  ReturnToClipboard = 'ReturnToClipboard',
+  ReturnToChatbox = 'ReturnToChatbox',
+  SendDirectly = 'SendDirectly'
+}
+
+const SettingsComponent = () => {
+  const [settings, setSettings] = useState<Config>({
+    prefix: ';',
+    split: '/',
+    command: ';',
+    ignore_prefix: false,
+    on_copy_mode: OnCopyMode.ReturnToChatbox,
+    skip_url: true
+  });
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    loadSettings();
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const loadedSettings: Config = await invoke('load_settings');
+      setSettings(loadedSettings);
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+    }
+  };
+
+  const saveSettings = async () => {
+    try {
+      await invoke('save_settings', { config: settings });
+      alert('設定が正常に保存されました。');
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      alert('設定の保存に失敗しました。もう一度お試しください。');
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setSettings(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSelectChange = (value: OnCopyMode) => {
+    setSettings(prev => ({ ...prev, on_copy_mode: value }));
+    setIsOpen(false);
+  };
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      setIsOpen(false);
+    }
+  };
+
+  const getOnCopyModeLabel = (mode: OnCopyMode) => {
+    switch (mode) {
+      case OnCopyMode.ReturnToClipboard:
+        return 'クリップボードへ送信';
+      case OnCopyMode.ReturnToChatbox:
+        return 'チャットボックスへ送信';
+      case OnCopyMode.SendDirectly:
+        return '直接チャットへ送信';
+    }
+  };
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold mb-2">設定</h2>
+      <div className="bg-white p-3 rounded-md shadow-inner h-[calc(100vh-100px)] overflow-y-auto">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              区切り文字
+            </label>
+            <input
+              type="text"
+              name="split"
+              value={settings.split}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              モード変更文字
+            </label>
+            <input
+              type="text"
+              name="command"
+              value={settings.command}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-md"
+            />
+          </div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="ignore_prefix"
+              name="ignore_prefix"
+              checked={settings.ignore_prefix}
+              onChange={handleChange}
+              className="mr-2"
+            />
+            <label htmlFor="ignore_prefix" className="text-sm font-medium text-gray-700">
+              無条件で変換
+            </label>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              開始文字
+            </label>
+            <input
+              type="text"
+              name="prefix"
+              value={settings.prefix}
+              onChange={handleChange}
+              className={`w-full p-2 border rounded-md ${settings.ignore_prefix ? 'bg-gray-100' : ''}`}
+              disabled={settings.ignore_prefix}
+            />
+          </div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="skip_url"
+              name="skip_url"
+              checked={settings.skip_url}
+              onChange={handleChange}
+              className="mr-2"
+            />
+            <label htmlFor="skip_url" className="text-sm font-medium text-gray-700">
+              URL が含まれている文章をスキップ
+            </label>
+          </div>
+          <div className="relative" ref={dropdownRef}>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              コピー時の動作
+            </label>
+            <div
+              className="w-full p-2 border rounded-md bg-white flex justify-between items-center cursor-pointer"
+              onClick={() => setIsOpen(!isOpen)}
+            >
+              <span>{getOnCopyModeLabel(settings.on_copy_mode)}</span>
+              <ChevronDown className={`transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} />
+            </div>
+            {isOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                {Object.values(OnCopyMode).map((mode) => (
+                  <div
+                    key={mode}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleSelectChange(mode)}
+                  >
+                    {getOnCopyModeLabel(mode)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={saveSettings}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+          >
+            保存
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SettingsComponent;

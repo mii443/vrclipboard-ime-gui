@@ -1,0 +1,82 @@
+// Prevents additional console window on Windows in release, DO NOT REMOVE!!
+//#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+mod com;
+mod felanguage;
+mod handler;
+mod conversion;
+mod config;
+mod converter; 
+mod transform_rule;
+
+use std::sync::Mutex;
+
+use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
+use tauri::{Manager, State};
+
+use clipboard_master::Master;
+use com::Com;
+use config::Config;
+use handler::ConversionHandler;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Log {
+  pub time: String,
+  pub original: String,
+  pub converted: String,
+}
+
+struct AppState {
+    config: Mutex<Config>,
+}
+
+static STATE: Lazy<Mutex<Config>> = Lazy::new(|| Mutex::new(Config::load().unwrap()));
+
+#[tauri::command]
+fn load_settings(state: State<AppState>) -> Result<Config, String> {
+    match Config::load() {
+        Ok(config) => {
+            let mut app_config = state.config.lock().unwrap();
+            *app_config = config.clone();
+            Ok(config)
+        },
+        Err(e) => Err(format!("Failed to load settings: {}", e)),
+    }
+}
+
+#[tauri::command]
+fn save_settings(config: Config, state: State<AppState>) -> Result<(), String> {
+    *STATE.lock().unwrap() = config.clone();
+    config.save(state)
+}
+
+fn main() {
+    println!("VRClipboard-IME Logs\nバグがあった場合はこのログを送ってください。");
+    tauri::Builder::default()
+        .manage(AppState {
+            config: Mutex::new(Config::load().unwrap_or_else(|_| {
+                Config::generate_default_config().expect("Failed to generate default config");
+                Config::load().expect("Failed to load default config")
+            })),
+        })
+        .invoke_handler(tauri::generate_handler![load_settings, save_settings])
+        .setup(|app| {
+            app.manage(STATE.lock().unwrap().clone());
+            let app_handle = app.app_handle();
+
+            std::thread::spawn(move || {
+                let _com = Com::new().unwrap();
+    
+                let conversion_handler = ConversionHandler::new(app_handle).unwrap();
+            
+                let mut master = Master::new(conversion_handler);
+            
+                master.run().unwrap();
+            });
+
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}

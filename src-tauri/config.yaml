@@ -1,0 +1,4 @@
+prefix: ";"
+command: ";"
+split: "/"
+ignore_prefix: false
