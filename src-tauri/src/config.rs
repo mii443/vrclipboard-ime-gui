@@ -21,7 +21,9 @@ pub struct Config {
     #[serde(default)]
     pub on_copy_mode: OnCopyMode,
     #[serde(default = "bool_true")]
-    pub skip_url: bool
+    pub skip_url: bool,
+    #[serde(default = "bool_false")]
+    pub use_tsf_reconvert: bool
 }
 
 impl Default for Config {
@@ -31,8 +33,9 @@ impl Default for Config {
             split: "/".to_string(), 
             command: ";".to_string(), 
             ignore_prefix: true, 
-            on_copy_mode: OnCopyMode::ReturnToChatbox ,
-            skip_url: true
+            on_copy_mode: OnCopyMode::ReturnToChatbox,
+            skip_url: true,
+            use_tsf_reconvert: false
         }
     }
 }
@@ -43,6 +46,8 @@ fn slash() -> String { String::from("/") }
 fn semicolon() -> String { String::from(";") }
 #[inline]
 fn bool_true() -> bool { true }
+#[inline]
+fn bool_false() -> bool { false }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum OnCopyMode {

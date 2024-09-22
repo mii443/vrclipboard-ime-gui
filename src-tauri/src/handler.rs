@@ -6,12 +6,13 @@ use clipboard_master::{ClipboardHandler, CallbackResult};
 use regex::Regex;
 use rosc::{encoder, OscMessage, OscPacket, OscType};
 use tauri::{AppHandle, Manager};
-use crate::{config::{Config, OnCopyMode}, conversion::Conversion, Log, STATE};
+use crate::{config::{Config, OnCopyMode}, conversion::Conversion, tsf_conversion::TsfConversion, Log, STATE};
 use anyhow::Result;
 
 pub struct ConversionHandler {
     app_handle: AppHandle,
     conversion: Conversion,
+    tsf_conversion: Option<TsfConversion>,
     clipboard_ctx: ClipboardContext,
     last_text: String,
 }
@@ -19,9 +20,10 @@ pub struct ConversionHandler {
 impl ConversionHandler {
     pub fn new(app_handle: AppHandle) -> Result<Self> {
         let conversion = Conversion::new();
+        let tsf_conversion = None;
         let clipboard_ctx = ClipboardProvider::new().unwrap();
 
-        Ok(Self { app_handle, conversion, clipboard_ctx, last_text: String::new() })
+        Ok(Self { app_handle, conversion, tsf_conversion, clipboard_ctx, last_text: String::new() })
     }
 
     pub fn get_config(&self) -> Config {
@@ -29,10 +31,28 @@ impl ConversionHandler {
     }
 }
 
+impl ConversionHandler {
+    fn tsf_conversion(&mut self, contents: &str, config: &Config) -> CallbackResult {
+        if self.tsf_conversion.is_none() {
+            self.tsf_conversion = Some(TsfConversion::new());
+
+            println!("TSF conversion created.");
+        }
+
+        let tsf_conversion = self.tsf_conversion.as_mut().unwrap();
+
+        CallbackResult::Next
+    }
+}
+
 impl ClipboardHandler for ConversionHandler {
     fn on_clipboard_change(&mut self) -> CallbackResult {
         let config = self.get_config();
         if let Ok(mut contents) = self.clipboard_ctx.get_contents() {
+            if config.use_tsf_reconvert {
+                return self.tsf_conversion(&contents, &config);
+            }
+
             if contents != self.last_text {
                 if contents.starts_with(&config.prefix) || config.ignore_prefix {
 

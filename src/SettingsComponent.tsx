@@ -9,6 +9,7 @@ interface Config {
   ignore_prefix: boolean;
   on_copy_mode: OnCopyMode;
   skip_url: boolean; 
+  use_tsf_reconvert: boolean;
 }
 
 enum OnCopyMode {
@@ -24,7 +25,8 @@ const SettingsComponent = () => {
     command: ';',
     ignore_prefix: false,
     on_copy_mode: OnCopyMode.ReturnToChatbox,
-    skip_url: true
+    skip_url: true,
+    use_tsf_reconvert: false
   });
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -178,6 +180,19 @@ const SettingsComponent = () => {
                 ))}
               </div>
             )}
+          </div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="use_tsf_reconvert"
+              name="use_tsf_reconvert"
+              checked={settings.use_tsf_reconvert}
+              onChange={handleChange}
+              className="mr-2"
+            />
+            <label htmlFor="use_tsf_reconvert" className="text-sm font-medium text-gray-700">
+              ベータ機能: Text Services Framework 再変換を使用（区切り、モード変更、開始文字が無効化されます）
+            </label>
           </div>
           <button
             onClick={saveSettings}

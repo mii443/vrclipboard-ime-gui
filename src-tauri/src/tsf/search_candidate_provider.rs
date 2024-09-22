@@ -1,11 +1,7 @@
 use anyhow::Result;
-use windows::{
-    core::Interface,
-    Win32::{
-        System::Com::{CoCreateInstance, CoInitialize, CoUninitialize, CLSCTX_INPROC_SERVER},
-        UI::{Input::KeyboardAndMouse::HKL, TextServices::{CLSID_TF_InputProcessorProfiles, CLSID_TF_ThreadMgr, ITfFnSearchCandidateProvider, ITfFunctionProvider, ITfInputProcessorProfileMgr, ITfThreadMgr2, GUID_TFCAT_TIP_KEYBOARD, TF_INPUTPROCESSORPROFILE, TF_IPPMF_DONTCARECURRENTINPUTLANGUAGE, TF_PROFILETYPE_INPUTPROCESSOR, TF_TMAE_NOACTIVATEKEYBOARDLAYOUT}, WindowsAndMessaging::{SystemParametersInfoW, SPI_SETTHREADLOCALINPUTSETTINGS, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS}},
-    },
-};
+use windows::Win32::UI::TextServices::{ITfFnSearchCandidateProvider, TF_TMAE_NOACTIVATEKEYBOARDLAYOUT};
+
+use super::{function_provider::FunctionProvider, input_processor_profile_mgr::InputProcessorProfileMgr, thread_mgr::ThreadMgr};
 
 pub struct SearchCandidateProvider {
     search_candidate_provider: ITfFnSearchCandidateProvider,

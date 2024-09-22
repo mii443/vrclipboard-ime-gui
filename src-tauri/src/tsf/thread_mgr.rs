@@ -1,11 +1,8 @@
 use anyhow::Result;
-use windows::{
-    core::Interface,
-    Win32::{
-        System::Com::{CoCreateInstance, CoInitialize, CoUninitialize, CLSCTX_INPROC_SERVER},
-        UI::{Input::KeyboardAndMouse::HKL, TextServices::{CLSID_TF_InputProcessorProfiles, CLSID_TF_ThreadMgr, ITfFnSearchCandidateProvider, ITfFunctionProvider, ITfInputProcessorProfileMgr, ITfThreadMgr2, GUID_TFCAT_TIP_KEYBOARD, TF_INPUTPROCESSORPROFILE, TF_IPPMF_DONTCARECURRENTINPUTLANGUAGE, TF_PROFILETYPE_INPUTPROCESSOR, TF_TMAE_NOACTIVATEKEYBOARDLAYOUT}, WindowsAndMessaging::{SystemParametersInfoW, SPI_SETTHREADLOCALINPUTSETTINGS, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS}},
-    },
-};
+use windows::Win32::{
+        System::Com::{CoCreateInstance, CLSCTX_INPROC_SERVER},
+        UI::TextServices::{CLSID_TF_ThreadMgr, ITfFunctionProvider, ITfThreadMgr2},
+    };
 
 pub struct ThreadMgr {
     thread_mgr: ITfThreadMgr2,
