@@ -44,10 +44,20 @@ impl FElanguage {
             )?;
         }
 
-        let result_struct = unsafe { ptr::read_unaligned(result_ptr) };
+        if result_ptr.is_null() {
+            return Err(anyhow::anyhow!("GetJMorphResult returned null pointer"));
+        }
+    
+        let result_struct = unsafe { &*result_ptr };
         let output_bstr_ptr = result_struct.pwchOutput;
-        let output_bstr = unsafe { output_bstr_ptr.to_string()? };
-        let output_string: String = output_bstr.chars().take(result_struct.cchOutput as usize).collect();
+        let output_len = result_struct.cchOutput as usize;
+    
+        if output_bstr_ptr.is_null() {
+            return Err(anyhow::anyhow!("Output BSTR pointer is null"));
+        }
+    
+        let output_slice = unsafe { std::slice::from_raw_parts(output_bstr_ptr.as_ptr(), output_len) };
+        let output_string = String::from_utf16_lossy(output_slice);
 
         Ok(output_string)
     }

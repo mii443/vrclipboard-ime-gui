@@ -11,7 +11,7 @@ impl Drop for Com {
 
 impl Com {
     pub fn new() -> Result<Self> {
-        unsafe { CoInitialize(None)? };
+        unsafe { let _ = CoInitialize(None); };
         Ok(Com)
     }
 }
