@@ -15,6 +15,7 @@ impl SearchCandidateProvider {
     pub fn create() -> Result<Self> {
         let profile_mgr = InputProcessorProfileMgr::new()?;
         let profile = profile_mgr.get_active_profile()?;
+        profile_mgr.activate_profile(&profile)?;
 
         let thread_mgr = ThreadMgr::new()?;
         let _client_id = thread_mgr.activate_ex(TF_TMAE_NOACTIVATEKEYBOARDLAYOUT)?;

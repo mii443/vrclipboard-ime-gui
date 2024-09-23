@@ -34,6 +34,8 @@ impl TsfConversion {
         println!("{} == {}", text, self.conversion_history.last().unwrap_or(&("".to_string())).clone());
         let same_as_last_conversion = text.to_string() == self.conversion_history.last().unwrap_or(&("".to_string())).clone();
 
+        self.target_text = text.to_string();
+
         if !same_as_last_conversion && self.now_reconvertion {
             self.now_reconvertion = false;
             self.reconversion_prefix = None;

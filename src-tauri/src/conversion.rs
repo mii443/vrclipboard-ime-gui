@@ -1,6 +1,5 @@
 use crate::{config::Config, converter::converter::{get_custom_converter, Converter}, STATE};
 use anyhow::Result;
-use regex::Regex;
 
 pub struct ConversionBlock {
     pub text: String,
