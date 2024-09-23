@@ -1,6 +1,6 @@
 pub mod converter;
-mod hiragana;
-mod katakana;
-mod roman_to_kanji;
-mod calculator;
+pub mod hiragana;
+pub mod katakana;
+pub mod roman_to_kanji;
+pub mod calculator;
 mod none_converter;

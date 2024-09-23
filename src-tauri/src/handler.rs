@@ -33,6 +33,10 @@ impl ConversionHandler {
 
 impl ConversionHandler {
     fn tsf_conversion(&mut self, contents: &str, config: &Config) -> CallbackResult {
+        if config.skip_url && Regex::new(r"(http://|https://){1}[\w\.\-/:\#\?=\&;%\~\+]+").unwrap().is_match(&contents) {
+            return CallbackResult::Next;
+        }
+
         if self.tsf_conversion.is_none() {
             self.tsf_conversion = Some(TsfConversion::new());
 
@@ -40,6 +44,34 @@ impl ConversionHandler {
         }
 
         let tsf_conversion = self.tsf_conversion.as_mut().unwrap();
+
+        let converted = tsf_conversion.convert(contents).unwrap_or("Failed to convert".to_string());
+
+        println!("TSF conversion: {} -> {}", contents, converted);
+
+        self.last_text = contents.to_string().clone();
+
+        let sock = UdpSocket::bind("127.0.0.1:0").unwrap();
+        let msg_buf = encoder::encode(&OscPacket::Message(OscMessage {
+            addr: "/chatbox/input".to_string(),
+            args: vec![
+                OscType::String(converted.clone()),
+                OscType::Bool(false),
+                OscType::Bool(true)
+            ]
+        })).unwrap();
+
+        sock.send_to(&msg_buf, "127.0.0.1:9000").unwrap();
+
+        let datetime = Local::now(); 
+        if self.app_handle
+            .emit_all("addLog", Log {
+                time: datetime.format("%Y %m/%d %H:%M:%S").to_string(),
+                original: contents.to_string().clone(),
+                converted
+            }).is_err() {
+                println!("App handle add log failed.");
+            }
 
         CallbackResult::Next
     }
