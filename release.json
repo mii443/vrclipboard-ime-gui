@@ -1,7 +1,7 @@
 {
-    "url": "https://r2-vrime.mii.dev/releases/vrclipboard-ime-gui_1.5.0_x64_ja-JP.msi.zip",
-    "version": "1.5.0",
-    "notes": "アップデート機能の追加, 日本語変換時にクラッシュするバグの修正",
-    "pub_date": "2024-09-22T07:15:54+00:00",
-    "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTTStkVlpUR0NpcVlrODNwM1M5NTUvWjNQVmxveVZTbWVqbjk5LzM5SFljanBSb05wa1RwM2J0ZlhhdWFqTzhEN2k0bjJReFBXVHRGNU9XS1RjZjYyVWU3Z2IxaWRNdGc4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzI2OTkxNTkwCWZpbGU6dnJjbGlwYm9hcmQtaW1lLWd1aV8xLjUuMF94NjRfamEtSlAubXNpLnppcApIYUIvSmlCM2MxNEZlVm5tSEpqMkNta1VkRml1MjdFeW5xN25IVE50UVZnaTlzOU9tOXNRY1NYMlU5MDFtMFRyN2F3ME8wRWZYSS9UMGZFSUE0bGtDUT09Cg=="
-  }
+  "url": "https://r2-vrime.mii.dev/releases/vrclipboard-ime-gui_1.6.0_x64_ja-JP.msi.zip",
+  "version": "1.6.0",
+  "notes": "ベータ機能 Text Services Framework を使用した再変換を追加",
+  "pub_date": "2024-09-23T07:59:37+00:00",
+  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTTStkVlpUR0NpcVdnb0phVVBYd2dYWjlHbXdCRGloZzJaZ21aejR2UjgyYXlkWnpvTUI1aERjellPc2lYVHhqaWUrWmdQUXZTMkR4MkVPMWdROHM3RlN2cUFDV3ZBNFE0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzI3MDc4MzExCWZpbGU6dnJjbGlwYm9hcmQtaW1lLWd1aV8xLjYuMF94NjRfamEtSlAubXNpLnppcAo2WXhDUWlUNkNtamJmdkloaXRBUEEzdmhvTnJubDQ3Q3dNaXk0OGZISnU4WmM0eVp1NG9KMS9RUUgyY25pd01uWGlCVnpYUDlVc0tIYVlVRU10NzhBdz09Cg=="
+}

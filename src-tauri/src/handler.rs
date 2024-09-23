@@ -33,6 +33,9 @@ impl ConversionHandler {
 
 impl ConversionHandler {
     fn tsf_conversion(&mut self, contents: &str, config: &Config) -> CallbackResult {
+        if contents.chars().count() > 140 {
+            return CallbackResult::Next;
+        }
         if config.skip_url && Regex::new(r"(http://|https://){1}[\w\.\-/:\#\?=\&;%\~\+]+").unwrap().is_match(&contents) {
             return CallbackResult::Next;
         }
