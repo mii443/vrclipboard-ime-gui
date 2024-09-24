@@ -54,29 +54,59 @@ impl ConversionHandler {
 
         self.last_text = contents.to_string().clone();
 
-        let sock = UdpSocket::bind("127.0.0.1:0").unwrap();
-        let msg_buf = encoder::encode(&OscPacket::Message(OscMessage {
-            addr: "/chatbox/input".to_string(),
-            args: vec![
-                OscType::String(converted.clone()),
-                OscType::Bool(false),
-                OscType::Bool(true)
-            ]
-        })).unwrap();
+        self.return_conversion(contents.to_string(), converted, config);
 
-        sock.send_to(&msg_buf, "127.0.0.1:9000").unwrap();
+        CallbackResult::Next
+    }
+
+    fn return_conversion(&mut self, parsed_contents: String, converted: String, config: &Config) {
+        match config.on_copy_mode {
+            OnCopyMode::ReturnToClipboard => {
+                let mut count = 0;
+                while self.clipboard_ctx.set_contents(converted.clone()).is_err() {
+                    if count > 4 {
+                        break;
+                    }
+                    count += 1;
+                }
+            },
+            OnCopyMode::ReturnToChatbox => {
+                let sock = UdpSocket::bind("127.0.0.1:0").unwrap();
+                let msg_buf = encoder::encode(&OscPacket::Message(OscMessage {
+                    addr: "/chatbox/input".to_string(),
+                    args: vec![
+                        OscType::String(converted.clone()),
+                        OscType::Bool(false),
+                        OscType::Bool(true)
+                    ]
+                })).unwrap();
+
+                sock.send_to(&msg_buf, "127.0.0.1:9000").unwrap();
+            },
+            OnCopyMode::SendDirectly => {
+                let sock = UdpSocket::bind("127.0.0.1:0").unwrap();
+                let msg_buf = encoder::encode(&OscPacket::Message(OscMessage {
+                    addr: "/chatbox/input".to_string(),
+                    args: vec![
+                        OscType::String(converted.clone()),
+                        OscType::Bool(true),
+                        OscType::Bool(true)
+                    ]
+                })).unwrap();
+
+                sock.send_to(&msg_buf, "127.0.0.1:9000").unwrap();
+            },
+        }
 
         let datetime = Local::now(); 
         if self.app_handle
             .emit_all("addLog", Log {
                 time: datetime.format("%Y %m/%d %H:%M:%S").to_string(),
-                original: contents.to_string().clone(),
+                original: parsed_contents,
                 converted
             }).is_err() {
                 println!("App handle add log failed.");
             }
-
-        CallbackResult::Next
     }
 }
 
@@ -106,53 +136,7 @@ impl ClipboardHandler for ConversionHandler {
 
                     self.last_text = converted.clone();
 
-                    match config.on_copy_mode {
-                        OnCopyMode::ReturnToClipboard => {
-                            let mut count = 0;
-                            while self.clipboard_ctx.set_contents(converted.clone()).is_err() {
-                                if count > 4 {
-                                    break;
-                                }
-                                count += 1;
-                            }
-                        },
-                        OnCopyMode::ReturnToChatbox => {
-                            let sock = UdpSocket::bind("127.0.0.1:0").unwrap();
-                            let msg_buf = encoder::encode(&OscPacket::Message(OscMessage {
-                                addr: "/chatbox/input".to_string(),
-                                args: vec![
-                                    OscType::String(converted.clone()),
-                                    OscType::Bool(false),
-                                    OscType::Bool(true)
-                                ]
-                            })).unwrap();
-
-                            sock.send_to(&msg_buf, "127.0.0.1:9000").unwrap();
-                        },
-                        OnCopyMode::SendDirectly => {
-                            let sock = UdpSocket::bind("127.0.0.1:0").unwrap();
-                            let msg_buf = encoder::encode(&OscPacket::Message(OscMessage {
-                                addr: "/chatbox/input".to_string(),
-                                args: vec![
-                                    OscType::String(converted.clone()),
-                                    OscType::Bool(true),
-                                    OscType::Bool(true)
-                                ]
-                            })).unwrap();
-
-                            sock.send_to(&msg_buf, "127.0.0.1:9000").unwrap();
-                        },
-                    }
-
-                    let datetime = Local::now(); 
-                    if self.app_handle
-                        .emit_all("addLog", Log {
-                            time: datetime.format("%Y %m/%d %H:%M:%S").to_string(),
-                            original: parsed_contents,
-                            converted
-                        }).is_err() {
-                            println!("App handle add log failed.");
-                        }
+                    self.return_conversion(parsed_contents, converted, &config);
                 } else {
                     self.last_text = contents;
                 }
