@@ -32,12 +32,12 @@ impl ConversionHandler {
 }
 
 impl ConversionHandler {
-    fn tsf_conversion(&mut self, contents: &str, config: &Config) -> CallbackResult {
+    fn tsf_conversion(&mut self, contents: &str, config: &Config) -> Result<()> {
         if contents.chars().count() > 140 {
-            return CallbackResult::Next;
+            return Ok(());
         }
         if config.skip_url && Regex::new(r"(http://|https://){1}[\w\.\-/:\#\?=\&;%\~\+]+").unwrap().is_match(&contents) {
-            return CallbackResult::Next;
+            return Ok(());
         }
 
         if self.tsf_conversion.is_none() {
@@ -48,7 +48,7 @@ impl ConversionHandler {
 
         let tsf_conversion = self.tsf_conversion.as_mut().unwrap();
 
-        let converted = tsf_conversion.convert(contents).unwrap_or("Failed to convert".to_string());
+        let converted = tsf_conversion.convert(contents)?;
 
         println!("TSF conversion: {} -> {}", contents, converted);
 
@@ -56,7 +56,7 @@ impl ConversionHandler {
 
         self.return_conversion(contents.to_string(), converted, config);
 
-        CallbackResult::Next
+        Ok(())
     }
 
     fn return_conversion(&mut self, parsed_contents: String, converted: String, config: &Config) {
@@ -115,7 +115,8 @@ impl ClipboardHandler for ConversionHandler {
         let config = self.get_config();
         if let Ok(mut contents) = self.clipboard_ctx.get_contents() {
             if config.use_tsf_reconvert {
-                return self.tsf_conversion(&contents, &config);
+                self.tsf_conversion(&contents, &config).expect("TSF conversion failed.");
+                return CallbackResult::Next;
             }
 
             if contents != self.last_text {
