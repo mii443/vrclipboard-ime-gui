@@ -8,7 +8,7 @@ pub struct TsfConversion {
     pub target_text: String,
     pub search_candidate_provider: SearchCandidateProvider,
     pub reconversion_candidates: Option<Vec<String>>,
-    pub reconversion_index: Option<usize>,
+    pub reconversion_index: Option<i32>,
     pub reconversion_prefix: Option<String>,
 }
 
@@ -54,6 +54,7 @@ impl TsfConversion {
     fn convert_tsf(&mut self, text: &str) -> Result<String> {
         self.now_reconvertion = true;
         let mut diff_hiragana = String::new();
+        let mut diff = String::new();
         if self.reconversion_prefix.is_none() {
             let o_minus_2 = self.conversion_history.get(if self.conversion_history.len() > 1 { self.conversion_history.len() - 2 } else { 0 }).unwrap_or(&("".to_string())).clone();
             let i_minus_1 = self.clipboard_history.get(if self.clipboard_history.len() > 0 { self.clipboard_history.len() - 1 } else { 0 }).unwrap_or(&("".to_string())).clone();
@@ -63,7 +64,7 @@ impl TsfConversion {
             if o_minus_2 != i_minus_1 && first_diff_position.is_none() {
                 first_diff_position = Some(o_minus_2.chars().count());
             }
-            let diff = i_minus_1.chars().skip(first_diff_position.unwrap_or(0)).collect::<String>();
+            diff = i_minus_1.chars().skip(first_diff_position.unwrap_or(0)).collect::<String>();
             println!("diff: {}", diff);
             diff_hiragana = HiraganaConverter.convert(&diff)?;
             let prefix = i_minus_1.chars().zip(o_minus_2.chars()).take_while(|(a, b)| a == b).map(|(a, _)| a).collect::<String>();
@@ -72,14 +73,20 @@ impl TsfConversion {
         println!("diff_hiragana: {}", diff_hiragana);
 
         let candidates = self.reconversion_candidates.get_or_insert_with(|| {
-            self.search_candidate_provider.get_candidates(&diff_hiragana, 10).unwrap_or_default()
+            let mut candidates = self.search_candidate_provider.get_candidates(&diff_hiragana, 10).unwrap_or_default();
+            if candidates.is_empty() {
+                candidates.push(diff_hiragana.clone());
+                let roman_to_kanji_converter = RomanToKanjiConverter;
+                let roman_to_kanji = roman_to_kanji_converter.convert(&diff_hiragana).unwrap();
+                candidates.push(roman_to_kanji);
+            }
+            candidates.insert(0, diff.to_string());
+            candidates
         });
 
-        let index = self.reconversion_index.get_or_insert(0);
+        let index = self.reconversion_index.get_or_insert(-1);
 
-        if *index == 0 && self.reconversion_prefix.as_ref().unwrap().to_owned() + &candidates[*index] == text {
-            *index += 1;
-        } else if *index + 1 < candidates.len() {
+        if *index + 1 < candidates.len() as i32 {
             *index += 1;
         } else {
             *index = 0;
@@ -89,7 +96,7 @@ impl TsfConversion {
             println!("Candidates: {:?}", self.reconversion_candidates.as_ref().unwrap());
         }
 
-        self.conversion_history.push(self.reconversion_prefix.clone().unwrap() + &self.reconversion_candidates.as_ref().unwrap()[self.reconversion_index.unwrap()].clone());
+        self.conversion_history.push(self.reconversion_prefix.clone().unwrap() + &self.reconversion_candidates.as_ref().unwrap()[self.reconversion_index.unwrap() as usize].clone());
         self.clipboard_history.push(text.to_string());
 
         while self.conversion_history.len() > 3 {
