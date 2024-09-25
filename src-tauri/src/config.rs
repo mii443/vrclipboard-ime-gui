@@ -5,6 +5,7 @@ use serde::Serialize;
 use serde_derive::Deserialize;
 use anyhow::Result;
 use tauri::State;
+use tracing::{info, error, debug, trace};
 
 use crate::AppState;
 
@@ -64,56 +65,71 @@ impl Default for OnCopyMode {
 
 impl Config {
     pub fn load() -> Result<Config> {
+        debug!("Loading config");
         std::fs::create_dir_all(Self::get_path()).unwrap();
 
-        if !Path::new(&Self::get_path().join("config.yaml")).exists() {
+        let config_path = Self::get_path().join("config.yaml");
+        if !Path::new(&config_path).exists() {
+            info!("Config file not found, generating default");
             Self::generate_default_config()?;
         }
-        let mut file = File::open(&Self::get_path().join("config.yaml"))?;
+        let mut file = File::open(&config_path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
+        trace!("Raw config contents: {}", contents);
         let config: Config = serde_yaml::from_str(&contents)?;
+        debug!("Config loaded successfully");
         Ok(config)
     }
 
     pub fn save(&self, state: State<AppState>) -> Result<(), String> {
+        debug!("Saving config");
         std::fs::create_dir_all(Self::get_path()).unwrap();
 
-        let mut file = match File::create(&Self::get_path().join("config.yaml")) {
+        let config_path = Self::get_path().join("config.yaml");
+        let mut file = match File::create(&config_path) {
             Ok(file) => file,
             Err(e) => {
-                println!("Err: {:?}", e);
+                error!("Failed to create config file: {}", e);
                 return Err(format!("Failed to create config file: {}", e))
             },
         };
     
         match serde_yaml::to_string(&self) {
             Ok(yaml) => {
+                trace!("Config to be saved: {}", yaml);
                 if let Err(e) = file.write_all(yaml.as_bytes()) {
-                    println!("Err: {:?}", e);
+                    error!("Failed to write config: {}", e);
                     return Err(format!("Failed to write config: {}", e));
                 }
                 let mut app_config = state.config.lock().unwrap();
                 *app_config = self.clone();
+                info!("Config saved successfully");
                 Ok(())
             },
             Err(e) => {
-                println!("Err: {:?}", e);
+                error!("Failed to serialize config: {}", e);
                 Err(format!("Failed to serialize config: {}", e))
             },
         }
     }
 
     pub fn generate_default_config() -> Result<()> {
-        let mut file = File::create(&Self::get_path().join("config.yaml"))?;
-        file.write_all(serde_yaml::to_string(&Config::default()).unwrap().as_bytes())?;
+        debug!("Generating default config");
+        let config_path = Self::get_path().join("config.yaml");
+        let mut file = File::create(&config_path)?;
+        let default_config = Config::default();
+        let yaml = serde_yaml::to_string(&default_config).unwrap();
+        file.write_all(yaml.as_bytes())?;
         file.flush()?;
+        info!("Default config generated successfully");
         Ok(())
     }
 
     pub fn get_path() -> PathBuf {
         let app_dirs = AppDirs::new(Some("vrclipboard-ime"), false).unwrap();
         let app_data = app_dirs.config_dir;
+        trace!("Config path: {:?}", app_data);
         app_data
     }
 }

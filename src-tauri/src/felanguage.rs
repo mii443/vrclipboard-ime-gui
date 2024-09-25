@@ -1,6 +1,7 @@
 use std::ptr;
 
 use anyhow::Result;
+use tracing::{debug, error, info, trace};
 use windows::{
     core::{w, PCWSTR},
     Win32::{
@@ -15,25 +16,41 @@ pub struct FElanguage {
 
 impl Drop for FElanguage {
     fn drop(&mut self) {
-        unsafe { self.ife.Close().ok() };
+        debug!("Dropping FElanguage instance");
+        if let Err(e) = unsafe { self.ife.Close() } {
+            error!("Error closing IFELanguage: {:?}", e);
+        }
     }
 }
 
 impl FElanguage {
     pub fn new() -> Result<Self> {
-        let clsid = unsafe { CLSIDFromProgID(w!("MSIME.Japan"))? };
-        let ife: IFELanguage = unsafe { CoCreateInstance(&clsid, None, CLSCTX_ALL)? };
-        unsafe { ife.Open()? };
+        info!("Creating new FElanguage instance");
+        let clsid = unsafe {
+            trace!("Getting CLSID for MSIME.Japan");
+            CLSIDFromProgID(w!("MSIME.Japan"))?
+        };
+        let ife: IFELanguage = unsafe {
+            trace!("Creating IFELanguage instance");
+            CoCreateInstance(&clsid, None, CLSCTX_ALL)?
+        };
+        unsafe {
+            trace!("Opening IFELanguage");
+            ife.Open()?
+        };
+        debug!("FElanguage instance created successfully");
         Ok(FElanguage { ife })
     }
 
     pub fn j_morph_result(&self, input: &str, request: u32, mode: u32) -> Result<String> {
+        debug!("Calling j_morph_result with input: {}, request: {}, mode: {}", input, request, mode);
         let input_utf16: Vec<u16> = input.encode_utf16().chain(Some(0)).collect();
         let input_len = input_utf16.len();
         let input_pcwstr = PCWSTR::from_raw(input_utf16.as_ptr());
 
         let mut result_ptr = ptr::null_mut();
         unsafe {
+            trace!("Calling GetJMorphResult");
             self.ife.GetJMorphResult(
                 request,
                 mode,
@@ -45,6 +62,7 @@ impl FElanguage {
         }
 
         if result_ptr.is_null() {
+            error!("GetJMorphResult returned null pointer");
             return Err(anyhow::anyhow!("GetJMorphResult returned null pointer"));
         }
     
@@ -53,12 +71,14 @@ impl FElanguage {
         let output_len = result_struct.cchOutput as usize;
     
         if output_bstr_ptr.is_null() {
+            error!("Output BSTR pointer is null");
             return Err(anyhow::anyhow!("Output BSTR pointer is null"));
         }
     
         let output_slice = unsafe { std::slice::from_raw_parts(output_bstr_ptr.as_ptr(), output_len) };
         let output_string = String::from_utf16_lossy(output_slice);
 
+        trace!("j_morph_result output: {}", output_string);
         Ok(output_string)
     }
 }

@@ -21,6 +21,7 @@ use clipboard_master::Master;
 use com::Com;
 use config::Config;
 use handler::ConversionHandler;
+use tracing::Level;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Log {
@@ -55,6 +56,7 @@ fn save_settings(config: Config, state: State<AppState>) -> Result<(), String> {
 
 fn main() {
     println!("VRClipboard-IME Logs\nバグがあった場合はこのログを送ってください。");
+    tracing_subscriber::fmt().with_max_level(Level::TRACE).init();
     tauri::Builder::default()
         .manage(AppState {
             config: Mutex::new(Config::load().unwrap_or_else(|_| {
@@ -64,6 +66,7 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![load_settings, save_settings])
         .setup(|app| {
+            let _span = tracing::span!(tracing::Level::INFO, "main");
             app.manage(STATE.lock().unwrap().clone());
             let app_handle = app.app_handle();
 

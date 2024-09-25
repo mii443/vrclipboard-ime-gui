@@ -1,7 +1,7 @@
 {
-  "url": "https://r2-vrime.mii.dev/releases/vrclipboard-ime-gui_1.6.0_x64_ja-JP.msi.zip",
-  "version": "1.6.0",
-  "notes": "ベータ機能 Text Services Framework を使用した再変換を追加",
-  "pub_date": "2024-09-23T07:59:37+00:00",
-  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTTStkVlpUR0NpcVdnb0phVVBYd2dYWjlHbXdCRGloZzJaZ21aejR2UjgyYXlkWnpvTUI1aERjellPc2lYVHhqaWUrWmdQUXZTMkR4MkVPMWdROHM3RlN2cUFDV3ZBNFE0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzI3MDc4MzExCWZpbGU6dnJjbGlwYm9hcmQtaW1lLWd1aV8xLjYuMF94NjRfamEtSlAubXNpLnppcAo2WXhDUWlUNkNtamJmdkloaXRBUEEzdmhvTnJubDQ3Q3dNaXk0OGZISnU4WmM0eVp1NG9KMS9RUUgyY25pd01uWGlCVnpYUDlVc0tIYVlVRU10NzhBdz09Cg=="
+  "url": "https://r2-vrime.mii.dev/releases/vrclipboard-ime-gui_1.7.0_x64_ja-JP.msi.zip",
+  "version": "1.7.0",
+  "notes": "Text Services Framework 再変換のバグ修正および仕様変更",
+  "pub_date": "2024-09-25T12:10:54+00:00",
+  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTTStkVlpUR0NpcVlQZFdBNEJzYk1QbVl0WUx3YU03SG1KTlJHT05jbVJwSFJ5UFJOaWNxRUd2bnlTOG1uYlo4VGhPc0xieXJGcUk2cDNDdzU4dEVZeVZhRU5QL2tKS3dNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzI3MjY2NDI3CWZpbGU6dnJjbGlwYm9hcmQtaW1lLWd1aV8xLjcuMF94NjRfamEtSlAubXNpLnppcApVSyt0VDVyRWl4K1IySTlmNEZWRDEvMVVpRzc2TEdhdyt0WmpvN3FCQm1wN1hpeXZDaUo5WmltM1dsV25raHRkRXNmbW9xazdRb25na29sL1d6MVhCdz09Cg=="
 }

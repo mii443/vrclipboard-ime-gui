@@ -1,11 +1,16 @@
 use anyhow::Result;
+use tracing::debug;
 use windows::Win32::System::Com::{CoInitialize, CoUninitialize};
 
 pub struct Com;
 
 impl Drop for Com {
     fn drop(&mut self) {
-        unsafe { CoUninitialize() };
+        debug!("Dropping Com instance");
+        unsafe { 
+            CoUninitialize();
+            debug!("CoUninitialize called");
+        };
     }
 }
 

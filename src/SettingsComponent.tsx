@@ -192,7 +192,7 @@ const SettingsComponent = () => {
             />
             <label htmlFor="use_tsf_reconvert" className="text-sm font-medium text-gray-700">
               ベータ機能: Text Services Framework 再変換を使用（区切り、モード変更、開始文字が無効化されます）<br />
-              Windows11を使用している場合は、「以前のバージョンの Microsoft IME を使う」を有効化する必要があります。
+              Windows10または11を使用している場合は、「以前のバージョンの Microsoft IME を使う」を有効化する必要があります。
             </label>
           </div>
           <button

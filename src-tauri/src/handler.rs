@@ -8,6 +8,7 @@ use rosc::{encoder, OscMessage, OscPacket, OscType};
 use tauri::{AppHandle, Manager};
 use crate::{config::{Config, OnCopyMode}, conversion::Conversion, tsf_conversion::TsfConversion, Log, STATE};
 use anyhow::Result;
+use tracing::{info, warn, error};
 
 pub struct ConversionHandler {
     app_handle: AppHandle,
@@ -23,6 +24,7 @@ impl ConversionHandler {
         let tsf_conversion = None;
         let clipboard_ctx = ClipboardProvider::new().unwrap();
 
+        info!("ConversionHandler created");
         Ok(Self { app_handle, conversion, tsf_conversion, clipboard_ctx, last_text: String::new() })
     }
 
@@ -34,23 +36,24 @@ impl ConversionHandler {
 impl ConversionHandler {
     fn tsf_conversion(&mut self, contents: &str, config: &Config) -> Result<()> {
         if contents.chars().count() > 140 {
+            info!("Content exceeds 140 characters, skipping TSF conversion");
             return Ok(());
         }
         if config.skip_url && Regex::new(r"(http://|https://){1}[\w\.\-/:\#\?=\&;%\~\+]+").unwrap().is_match(&contents) {
+            info!("URL detected, skipping TSF conversion");
             return Ok(());
         }
 
         if self.tsf_conversion.is_none() {
             self.tsf_conversion = Some(TsfConversion::new());
-
-            println!("TSF conversion created.");
+            info!("TSF conversion created");
         }
 
         let tsf_conversion = self.tsf_conversion.as_mut().unwrap();
 
         let converted = tsf_conversion.convert(contents)?;
 
-        println!("TSF conversion: {} -> {}", contents, converted);
+        info!("TSF conversion: {} -> {}", contents, converted);
 
         self.last_text = contents.to_string().clone();
 
@@ -65,10 +68,12 @@ impl ConversionHandler {
                 let mut count = 0;
                 while self.clipboard_ctx.set_contents(converted.clone()).is_err() {
                     if count > 4 {
+                        warn!("Failed to set clipboard contents after 5 attempts");
                         break;
                     }
                     count += 1;
                 }
+                info!("Conversion returned to clipboard");
             },
             OnCopyMode::ReturnToChatbox => {
                 let sock = UdpSocket::bind("127.0.0.1:0").unwrap();
@@ -81,7 +86,11 @@ impl ConversionHandler {
                     ]
                 })).unwrap();
 
-                sock.send_to(&msg_buf, "127.0.0.1:9000").unwrap();
+                if let Err(e) = sock.send_to(&msg_buf, "127.0.0.1:9000") {
+                    error!("Failed to send UDP packet: {}", e);
+                } else {
+                    info!("Conversion returned to chatbox");
+                }
             },
             OnCopyMode::SendDirectly => {
                 let sock = UdpSocket::bind("127.0.0.1:0").unwrap();
@@ -94,7 +103,11 @@ impl ConversionHandler {
                     ]
                 })).unwrap();
 
-                sock.send_to(&msg_buf, "127.0.0.1:9000").unwrap();
+                if let Err(e) = sock.send_to(&msg_buf, "127.0.0.1:9000") {
+                    error!("Failed to send UDP packet: {}", e);
+                } else {
+                    info!("Conversion sent directly");
+                }
             },
         }
 
@@ -105,7 +118,7 @@ impl ConversionHandler {
                 original: parsed_contents,
                 converted
             }).is_err() {
-                println!("App handle add log failed.");
+                error!("App handle add log failed");
             }
     }
 }
@@ -115,14 +128,16 @@ impl ClipboardHandler for ConversionHandler {
         let config = self.get_config();
         if let Ok(mut contents) = self.clipboard_ctx.get_contents() {
             if config.use_tsf_reconvert {
-                self.tsf_conversion(&contents, &config).expect("TSF conversion failed.");
+                if let Err(e) = self.tsf_conversion(&contents, &config) {
+                    error!("TSF conversion failed: {}", e);
+                }
                 return CallbackResult::Next;
             }
 
             if contents != self.last_text {
                 if contents.starts_with(&config.prefix) || config.ignore_prefix {
-
                     if config.skip_url && Regex::new(r"(http://|https://){1}[\w\.\-/:\#\?=\&;%\~\+]+").unwrap().is_match(&contents) {
+                        info!("URL detected, skipping conversion");
                         return CallbackResult::Next;
                     }
 
@@ -130,7 +145,7 @@ impl ClipboardHandler for ConversionHandler {
                     let converted = match self.conversion.convert_text(&parsed_contents) {
                         Ok(converted) => converted,
                         Err(err) => {
-                            println!("Error: {:?}", err);
+                            error!("Conversion error: {:?}", err);
                             format!("Error: {:?}", err)
                         }
                     };
