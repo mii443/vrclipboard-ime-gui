@@ -1,7 +1,7 @@
 {
-  "url": "https://r2-vrime.mii.dev/releases/vrclipboard-ime-gui_1.7.0_x64_ja-JP.msi.zip",
-  "version": "1.7.0",
-  "notes": "Text Services Framework 再変換のバグ修正および仕様変更",
-  "pub_date": "2024-09-25T12:10:54+00:00",
-  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTTStkVlpUR0NpcVlQZFdBNEJzYk1QbVl0WUx3YU03SG1KTlJHT05jbVJwSFJ5UFJOaWNxRUd2bnlTOG1uYlo4VGhPc0xieXJGcUk2cDNDdzU4dEVZeVZhRU5QL2tKS3dNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzI3MjY2NDI3CWZpbGU6dnJjbGlwYm9hcmQtaW1lLWd1aV8xLjcuMF94NjRfamEtSlAubXNpLnppcApVSyt0VDVyRWl4K1IySTlmNEZWRDEvMVVpRzc2TEdhdyt0WmpvN3FCQm1wN1hpeXZDaUo5WmltM1dsV25raHRkRXNmbW9xazdRb25na29sL1d6MVhCdz09Cg=="
+  "url": "https://r2-vrime.mii.dev/releases/vrclipboard-ime-gui_1.8.0_x64_ja-JP.msi.zip",
+  "version": "1.8.0",
+  "notes": "ログの出力を改善",
+  "pub_date": "2024-09-25T14:51:05+00:00",
+  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTTStkVlpUR0NpcVRKNk52ZVBuRy9HeWJRd2xidVNHaWtwYlJUTlZtOWIzM3Fka09nKzI0ME5nN3hJbnA5SUhHQXB0bHJua1FRNXlSOGVZSDlsM2RJazl6a1lPSEJjeWdFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzI3Mjc1ODM0CWZpbGU6dnJjbGlwYm9hcmQtaW1lLWd1aV8xLjguMF94NjRfamEtSlAubXNpLnppcApuc05NbWI1US9QbzlkcXNRa3FXd2tEd3l2Nyt6K1NYSU8zN2MwN0xxaDY3cDNJZ1NpMXI5YXp0WTdveEs0MGJ0T1dIcEJBenZORWY0bmtHdGkyK2VEUT09Cg=="
 }
