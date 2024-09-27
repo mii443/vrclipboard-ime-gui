@@ -6,6 +6,7 @@ use clipboard_master::{ClipboardHandler, CallbackResult};
 use regex::Regex;
 use rosc::{encoder, OscMessage, OscPacket, OscType};
 use tauri::{AppHandle, Manager};
+use windows::Win32::System::DataExchange::GetClipboardOwner;
 use crate::{config::{Config, OnCopyMode}, conversion::Conversion, tsf_conversion::TsfConversion, Log, STATE};
 use anyhow::Result;
 use tracing::{info, warn, error};
@@ -34,6 +35,10 @@ impl ConversionHandler {
 }
 
 impl ConversionHandler {
+    fn clipboard_has_owner(&mut self) -> bool {
+        unsafe { GetClipboardOwner() }.is_ok()
+    }
+
     fn tsf_conversion(&mut self, contents: &str, config: &Config) -> Result<()> {
         if contents.chars().count() > 140 {
             info!("Content exceeds 140 characters, skipping TSF conversion");
@@ -126,6 +131,11 @@ impl ConversionHandler {
 impl ClipboardHandler for ConversionHandler {
     fn on_clipboard_change(&mut self) -> CallbackResult {
         let config = self.get_config();
+        if config.skip_on_out_of_vrc && self.clipboard_has_owner() {
+            info!("Clipboard has owner (maybe from outside of VRChat), skipping conversion");
+            return CallbackResult::Next;
+        }
+
         if let Ok(mut contents) = self.clipboard_ctx.get_contents() {
             if config.use_tsf_reconvert {
                 if let Err(e) = self.tsf_conversion(&contents, &config) {

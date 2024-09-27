@@ -10,6 +10,7 @@ interface Config {
   on_copy_mode: OnCopyMode;
   skip_url: boolean; 
   use_tsf_reconvert: boolean;
+  skip_on_out_of_vrc: boolean;
 }
 
 enum OnCopyMode {
@@ -26,7 +27,8 @@ const SettingsComponent = () => {
     ignore_prefix: false,
     on_copy_mode: OnCopyMode.ReturnToChatbox,
     skip_url: true,
-    use_tsf_reconvert: false
+    use_tsf_reconvert: false,
+    skip_on_out_of_vrc: true,
   });
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -48,9 +50,9 @@ const SettingsComponent = () => {
     }
   };
 
-  const saveSettings = async () => {
+  const saveSettings = async (newSettings: Config) => {
     try {
-      await invoke('save_settings', { config: settings });
+      await invoke('save_settings', { config: newSettings });
       alert('設定が正常に保存されました。');
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -60,15 +62,19 @@ const SettingsComponent = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setSettings(prev => ({
-      ...prev,
+    const newSettings = {
+      ...settings,
       [name]: type === 'checkbox' ? checked : value
-    }));
+    };
+    setSettings(newSettings);
+    saveSettings(newSettings);
   };
 
   const handleSelectChange = (value: OnCopyMode) => {
-    setSettings(prev => ({ ...prev, on_copy_mode: value }));
+    const newSettings = { ...settings, on_copy_mode: value };
+    setSettings(newSettings);
     setIsOpen(false);
+    saveSettings(newSettings);
   };
 
   const handleClickOutside = (event: MouseEvent) => {
@@ -195,12 +201,19 @@ const SettingsComponent = () => {
               Windows10または11を使用している場合は、「以前のバージョンの Microsoft IME を使う」を有効化する必要があります。
             </label>
           </div>
-          <button
-            onClick={saveSettings}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-          >
-            保存
-          </button>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="skip_on_out_of_vrc"
+              name="skip_on_out_of_vrc"
+              checked={settings.skip_on_out_of_vrc}
+              onChange={handleChange}
+              className="mr-2"
+            />
+            <label htmlFor="skip_on_out_of_vrc" className="text-sm font-medium text-gray-700">
+              VRChat以外からのコピーをスキップ
+            </label>
+          </div>
         </div>
       </div>
     </div>

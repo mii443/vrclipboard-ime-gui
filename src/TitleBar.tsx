@@ -10,7 +10,7 @@ const TitleBar = () => {
     <div className="flex justify-between items-center bg-gray-800 text-white h-8 px-2" data-tauri-drag-region>
       <div className="flex items-center">
         <span className="text-sm font-semibold">VRClipboard-IME</span>
-        <span className="text-xs font-semibold ml-2">v1.7.0</span>
+        <span className="text-xs font-semibold ml-2">v1.9.0</span>
       </div>
       <div className="flex">
         <button onClick={handleMinimize} className="p-1 hover:bg-gray-700 focus:outline-none">

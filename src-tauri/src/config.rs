@@ -24,7 +24,9 @@ pub struct Config {
     #[serde(default = "bool_true")]
     pub skip_url: bool,
     #[serde(default = "bool_false")]
-    pub use_tsf_reconvert: bool
+    pub use_tsf_reconvert: bool,
+    #[serde(default = "bool_true")]
+    pub skip_on_out_of_vrc: bool,
 }
 
 impl Default for Config {
@@ -36,7 +38,8 @@ impl Default for Config {
             ignore_prefix: true, 
             on_copy_mode: OnCopyMode::ReturnToChatbox,
             skip_url: true,
-            use_tsf_reconvert: false
+            use_tsf_reconvert: false,
+            skip_on_out_of_vrc: true,
         }
     }
 }
