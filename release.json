@@ -1,7 +1,7 @@
 {
   "url": "https://r2-vrime.mii.dev/releases/vrclipboard-ime-gui_1.9.0_x64_ja-JP.msi.zip",
-  "version": "1.8.0",
-  "notes": "ログの出力を改善",
-  "pub_date": "2024-09-25T14:51:05+00:00",
-  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTTStkVlpUR0NpcVRKNk52ZVBuRy9HeWJRd2xidVNHaWtwYlJUTlZtOWIzM3Fka09nKzI0ME5nN3hJbnA5SUhHQXB0bHJua1FRNXlSOGVZSDlsM2RJazl6a1lPSEJjeWdFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzI3Mjc1ODM0CWZpbGU6dnJjbGlwYm9hcmQtaW1lLWd1aV8xLjguMF94NjRfamEtSlAubXNpLnppcApuc05NbWI1US9QbzlkcXNRa3FXd2tEd3l2Nyt6K1NYSU8zN2MwN0xxaDY3cDNJZ1NpMXI5YXp0WTdveEs0MGJ0T1dIcEJBenZORWY0bmtHdGkyK2VEUT09Cg=="
+  "version": "1.9.0",
+  "notes": "VRChat外でコピーした文字列の変換をスキップする機能の実装",
+  "pub_date": "2024-09-27T12:18:27+00:00",
+  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTTStkVlpUR0NpcVdBalVrbUpDcDdac3NhSFhMZFZGbW90STNOYnJNVVhzZkdFQ0t3TzVTMkRoUkhQQVI1RnVHR2xSdUNYL0ttS0NTWW1OcFMyS2NtaGoybmZmdjU5TUFJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzI3NDM5Mjk5CWZpbGU6dnJjbGlwYm9hcmQtaW1lLWd1aV8xLjkuMF94NjRfamEtSlAubXNpLnppcAp6QTNXc2hGbXNaRU1PdVA3L1FHOVBrU2wvOE1HZGFpL3h6K2lSa3Buby9Jbnc0VTVnaGMrR2tQOHVOUHVHa1A3b1FmZmVUQlJZYk9WY3hmL3dteVZEZz09Cg=="
 }
