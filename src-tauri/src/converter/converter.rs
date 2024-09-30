@@ -1,5 +1,5 @@
 use anyhow::Result;
-use tracing::{debug, info, trace};
+use tracing::{debug, trace};
 
 use super::{calculator::CalculatorConverter, hiragana::HiraganaConverter, katakana::KatakanaConverter, none_converter::NoneConverter, roman_to_kanji::RomanToKanjiConverter};
 
