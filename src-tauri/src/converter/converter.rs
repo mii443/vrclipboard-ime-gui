@@ -1,7 +1,10 @@
 use anyhow::Result;
 use tracing::{debug, trace};
 
-use super::{calculator::CalculatorConverter, hiragana::HiraganaConverter, katakana::KatakanaConverter, none_converter::NoneConverter, roman_to_kanji::RomanToKanjiConverter};
+use super::{
+    calculator::CalculatorConverter, hiragana::HiraganaConverter, katakana::KatakanaConverter,
+    none_converter::NoneConverter, roman_to_kanji::RomanToKanjiConverter,
+};
 
 pub trait Converter {
     fn convert(&self, text: &str) -> Result<String>;

@@ -14,11 +14,11 @@ impl Converter for CalculatorConverter {
                 let formatted = format!("{} = {}", text, result.to_string());
                 info!("Evaluation successful: {}", formatted);
                 formatted
-            },
+            }
             Err(e) => {
                 debug!("Evaluation failed: {}", e);
                 e.to_string()
-            },
+            }
         };
 
         Ok(result)

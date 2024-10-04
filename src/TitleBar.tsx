@@ -1,5 +1,6 @@
-import { appWindow } from '@tauri-apps/api/window';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { X, Minus, Square } from 'lucide-react';
+const appWindow = getCurrentWebviewWindow()
 
 const TitleBar = () => {
   const handleClose = () => appWindow.close();

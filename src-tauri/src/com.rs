@@ -7,7 +7,7 @@ pub struct Com;
 impl Drop for Com {
     fn drop(&mut self) {
         debug!("Dropping Com instance");
-        unsafe { 
+        unsafe {
             CoUninitialize();
             debug!("CoUninitialize called");
         };
@@ -16,7 +16,9 @@ impl Drop for Com {
 
 impl Com {
     pub fn new() -> Result<Self> {
-        unsafe { let _ = CoInitialize(None); };
+        unsafe {
+            let _ = CoInitialize(None);
+        };
         Ok(Com)
     }
 }

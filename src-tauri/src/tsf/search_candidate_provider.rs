@@ -1,8 +1,13 @@
 use anyhow::Result;
-use tracing::{debug, info, error, trace};
-use windows::Win32::UI::TextServices::{ITfFnSearchCandidateProvider, TF_TMAE_NOACTIVATEKEYBOARDLAYOUT};
+use tracing::{debug, error, info, trace};
+use windows::Win32::UI::TextServices::{
+    ITfFnSearchCandidateProvider, TF_TMAE_NOACTIVATEKEYBOARDLAYOUT,
+};
 
-use super::{function_provider::FunctionProvider, input_processor_profile_mgr::InputProcessorProfileMgr, thread_mgr::ThreadMgr};
+use super::{
+    function_provider::FunctionProvider, input_processor_profile_mgr::InputProcessorProfileMgr,
+    thread_mgr::ThreadMgr,
+};
 
 pub struct SearchCandidateProvider {
     search_candidate_provider: ITfFnSearchCandidateProvider,
@@ -11,7 +16,9 @@ pub struct SearchCandidateProvider {
 impl SearchCandidateProvider {
     pub fn new(search_candidate_provider: ITfFnSearchCandidateProvider) -> Self {
         debug!("Creating new SearchCandidateProvider");
-        Self { search_candidate_provider }
+        Self {
+            search_candidate_provider,
+        }
     }
 
     pub fn create() -> Result<Self> {
@@ -29,7 +36,8 @@ impl SearchCandidateProvider {
         let function_provider = thread_mgr.get_function_provider(&profile.clsid)?;
 
         debug!("Getting search candidate provider");
-        let search_candidate_provider = FunctionProvider::new(function_provider).get_search_candidate_provider()?;  
+        let search_candidate_provider =
+            FunctionProvider::new(function_provider).get_search_candidate_provider()?;
 
         info!("SearchCandidateProvider created successfully");
         Ok(search_candidate_provider)
@@ -42,9 +50,12 @@ impl SearchCandidateProvider {
 
         let input_utf16: Vec<u16> = "".encode_utf16().chain(Some(0)).collect();
         let input_bstr_empty = windows_core::BSTR::from_wide(&input_utf16)?;
-        
+
         trace!("Calling GetSearchCandidates");
-        let candidates = unsafe { self.search_candidate_provider.GetSearchCandidates(&input_bstr, &input_bstr_empty)? };
+        let candidates = unsafe {
+            self.search_candidate_provider
+                .GetSearchCandidates(&input_bstr, &input_bstr_empty)?
+        };
         let candidates_enum = unsafe { candidates.EnumCandidates()? };
 
         let mut candidates = vec![None; max];
@@ -54,15 +65,18 @@ impl SearchCandidateProvider {
 
         candidates.resize(candidates_count as usize, None);
 
-        let candidates: Vec<String> = candidates.iter().map(|candidate| unsafe { 
-            match candidate.as_ref().unwrap().GetString() {
-                Ok(s) => s.to_string(),
-                Err(e) => {
-                    error!("Failed to get candidate string: {:?}", e);
-                    String::new()
+        let candidates: Vec<String> = candidates
+            .iter()
+            .map(|candidate| unsafe {
+                match candidate.as_ref().unwrap().GetString() {
+                    Ok(s) => s.to_string(),
+                    Err(e) => {
+                        error!("Failed to get candidate string: {:?}", e);
+                        String::new()
+                    }
                 }
-            }
-        }).collect();
+            })
+            .collect();
         info!("Retrieved {} candidates", candidates.len());
         Ok(candidates)
     }

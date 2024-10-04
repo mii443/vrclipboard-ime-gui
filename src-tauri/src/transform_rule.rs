@@ -1,3 +1,1 @@
-pub struct TransformRule {
-
-}
+pub struct TransformRule {}

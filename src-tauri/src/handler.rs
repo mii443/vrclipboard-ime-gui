@@ -1,15 +1,20 @@
 use std::net::UdpSocket;
 
+use crate::{
+    config::{Config, OnCopyMode},
+    conversion::Conversion,
+    tsf_conversion::TsfConversion,
+    Log, STATE,
+};
+use anyhow::Result;
 use chrono::Local;
 use clipboard::{ClipboardContext, ClipboardProvider};
-use clipboard_master::{ClipboardHandler, CallbackResult};
+use clipboard_master::{CallbackResult, ClipboardHandler};
 use regex::Regex;
 use rosc::{encoder, OscMessage, OscPacket, OscType};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
+use tracing::{error, info, warn};
 use windows::Win32::System::DataExchange::GetClipboardOwner;
-use crate::{config::{Config, OnCopyMode}, conversion::Conversion, tsf_conversion::TsfConversion, Log, STATE};
-use anyhow::Result;
-use tracing::{info, warn, error};
 
 pub struct ConversionHandler {
     app_handle: AppHandle,
@@ -26,7 +31,13 @@ impl ConversionHandler {
         let clipboard_ctx = ClipboardProvider::new().unwrap();
 
         info!("ConversionHandler created");
-        Ok(Self { app_handle, conversion, tsf_conversion, clipboard_ctx, last_text: String::new() })
+        Ok(Self {
+            app_handle,
+            conversion,
+            tsf_conversion,
+            clipboard_ctx,
+            last_text: String::new(),
+        })
     }
 
     pub fn get_config(&self) -> Config {
@@ -44,7 +55,11 @@ impl ConversionHandler {
             info!("Content exceeds 140 characters, skipping TSF conversion");
             return Ok(());
         }
-        if config.skip_url && Regex::new(r"(http://|https://){1}[\w\.\-/:\#\?=\&;%\~\+]+").unwrap().is_match(&contents) {
+        if config.skip_url
+            && Regex::new(r"(http://|https://){1}[\w\.\-/:\#\?=\&;%\~\+]+")
+                .unwrap()
+                .is_match(&contents)
+        {
             info!("URL detected, skipping TSF conversion");
             return Ok(());
         }
@@ -79,7 +94,7 @@ impl ConversionHandler {
                     count += 1;
                 }
                 info!("Conversion returned to clipboard");
-            },
+            }
             OnCopyMode::ReturnToChatbox => {
                 let sock = UdpSocket::bind("127.0.0.1:0").unwrap();
                 let msg_buf = encoder::encode(&OscPacket::Message(OscMessage {
@@ -87,16 +102,17 @@ impl ConversionHandler {
                     args: vec![
                         OscType::String(converted.clone()),
                         OscType::Bool(false),
-                        OscType::Bool(true)
-                    ]
-                })).unwrap();
+                        OscType::Bool(true),
+                    ],
+                }))
+                .unwrap();
 
                 if let Err(e) = sock.send_to(&msg_buf, "127.0.0.1:9000") {
                     error!("Failed to send UDP packet: {}", e);
                 } else {
                     info!("Conversion returned to chatbox");
                 }
-            },
+            }
             OnCopyMode::SendDirectly => {
                 let sock = UdpSocket::bind("127.0.0.1:0").unwrap();
                 let msg_buf = encoder::encode(&OscPacket::Message(OscMessage {
@@ -104,27 +120,34 @@ impl ConversionHandler {
                     args: vec![
                         OscType::String(converted.clone()),
                         OscType::Bool(true),
-                        OscType::Bool(true)
-                    ]
-                })).unwrap();
+                        OscType::Bool(true),
+                    ],
+                }))
+                .unwrap();
 
                 if let Err(e) = sock.send_to(&msg_buf, "127.0.0.1:9000") {
                     error!("Failed to send UDP packet: {}", e);
                 } else {
                     info!("Conversion sent directly");
                 }
-            },
+            }
         }
 
-        let datetime = Local::now(); 
-        if self.app_handle
-            .emit_all("addLog", Log {
-                time: datetime.format("%Y %m/%d %H:%M:%S").to_string(),
-                original: parsed_contents,
-                converted
-            }).is_err() {
-                error!("App handle add log failed");
-            }
+        let datetime = Local::now();
+        if self
+            .app_handle
+            .emit(
+                "addLog",
+                Log {
+                    time: datetime.format("%Y %m/%d %H:%M:%S").to_string(),
+                    original: parsed_contents,
+                    converted,
+                },
+            )
+            .is_err()
+        {
+            error!("App handle add log failed");
+        }
     }
 }
 
@@ -146,12 +169,20 @@ impl ClipboardHandler for ConversionHandler {
 
             if contents != self.last_text {
                 if contents.starts_with(&config.prefix) || config.ignore_prefix {
-                    if config.skip_url && Regex::new(r"(http://|https://){1}[\w\.\-/:\#\?=\&;%\~\+]+").unwrap().is_match(&contents) {
+                    if config.skip_url
+                        && Regex::new(r"(http://|https://){1}[\w\.\-/:\#\?=\&;%\~\+]+")
+                            .unwrap()
+                            .is_match(&contents)
+                    {
                         info!("URL detected, skipping conversion");
                         return CallbackResult::Next;
                     }
 
-                    let parsed_contents = if config.ignore_prefix { contents } else { contents.split_off(1) };
+                    let parsed_contents = if config.ignore_prefix {
+                        contents
+                    } else {
+                        contents.split_off(1)
+                    };
                     let converted = match self.conversion.convert_text(&parsed_contents) {
                         Ok(converted) => converted,
                         Err(err) => {

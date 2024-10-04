@@ -8,10 +8,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1", features = [] }
+tauri-build = { version = "2.0.0-rc", features = [] }
 
 [dependencies]
-tauri = { version = "1", features = [ "updater", "window-close", "window-start-dragging", "window-show", "window-unmaximize", "window-minimize", "window-maximize", "window-hide", "window-unminimize", "shell-open"] }
+tauri = { version = "2.0.0-rc", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = "0.4.38"
@@ -29,6 +29,7 @@ regex = "1"
 windows-core = "0.58.0"
 tracing = "0.1"
 tracing-appender = "0.2"
+tauri-plugin-shell = "2.0.0-rc"
 
 [dependencies.tracing-subscriber]
 version = "0.3.16"
@@ -49,3 +50,6 @@ features = [
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2.0.0-rc"

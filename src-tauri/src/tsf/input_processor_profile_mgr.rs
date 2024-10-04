@@ -1,8 +1,15 @@
 use anyhow::Result;
-use tracing::{debug, info, error};
+use tracing::{debug, error, info};
 use windows::Win32::{
     System::Com::{CoCreateInstance, CLSCTX_INPROC_SERVER},
-    UI::{Input::KeyboardAndMouse::HKL, TextServices::{CLSID_TF_InputProcessorProfiles, ITfInputProcessorProfileMgr, GUID_TFCAT_TIP_KEYBOARD, TF_INPUTPROCESSORPROFILE, TF_IPPMF_DONTCARECURRENTINPUTLANGUAGE, TF_PROFILETYPE_INPUTPROCESSOR}},
+    UI::{
+        Input::KeyboardAndMouse::HKL,
+        TextServices::{
+            CLSID_TF_InputProcessorProfiles, ITfInputProcessorProfileMgr, GUID_TFCAT_TIP_KEYBOARD,
+            TF_INPUTPROCESSORPROFILE, TF_IPPMF_DONTCARECURRENTINPUTLANGUAGE,
+            TF_PROFILETYPE_INPUTPROCESSOR,
+        },
+    },
 };
 
 pub struct InputProcessorProfileMgr {
@@ -12,9 +19,13 @@ pub struct InputProcessorProfileMgr {
 impl InputProcessorProfileMgr {
     pub fn new() -> Result<Self> {
         debug!("Creating new InputProcessorProfileMgr");
-        let input_processor_profile_mgr = unsafe { CoCreateInstance(&CLSID_TF_InputProcessorProfiles, None, CLSCTX_INPROC_SERVER)? };
+        let input_processor_profile_mgr = unsafe {
+            CoCreateInstance(&CLSID_TF_InputProcessorProfiles, None, CLSCTX_INPROC_SERVER)?
+        };
         info!("InputProcessorProfileMgr created successfully");
-        Ok(InputProcessorProfileMgr { input_processor_profile_mgr })
+        Ok(InputProcessorProfileMgr {
+            input_processor_profile_mgr,
+        })
     }
 
     pub fn get_active_profile(&self) -> Result<TF_INPUTPROCESSORPROFILE> {
@@ -22,25 +33,37 @@ impl InputProcessorProfileMgr {
         let keyboard_guid = GUID_TFCAT_TIP_KEYBOARD;
         let mut profile = TF_INPUTPROCESSORPROFILE::default();
 
-        match unsafe { self.input_processor_profile_mgr.GetActiveProfile(&keyboard_guid, &mut profile) } {
+        match unsafe {
+            self.input_processor_profile_mgr
+                .GetActiveProfile(&keyboard_guid, &mut profile)
+        } {
             Ok(_) => {
                 info!("Active profile retrieved successfully");
                 Ok(profile)
-            },
+            }
             Err(e) => {
                 error!("Failed to get active profile: {:?}", e);
                 Err(e.into())
             }
         }
     }
-    
+
     pub fn activate_profile(&self, profile: &TF_INPUTPROCESSORPROFILE) -> Result<()> {
         debug!("Activating profile: {:?}", profile);
-        match unsafe { self.input_processor_profile_mgr.ActivateProfile(TF_PROFILETYPE_INPUTPROCESSOR, profile.langid, &profile.clsid, &profile.guidProfile, HKL::default(), TF_IPPMF_DONTCARECURRENTINPUTLANGUAGE) } {
+        match unsafe {
+            self.input_processor_profile_mgr.ActivateProfile(
+                TF_PROFILETYPE_INPUTPROCESSOR,
+                profile.langid,
+                &profile.clsid,
+                &profile.guidProfile,
+                HKL::default(),
+                TF_IPPMF_DONTCARECURRENTINPUTLANGUAGE,
+            )
+        } {
             Ok(_) => {
                 info!("Profile activated successfully");
                 Ok(())
-            },
+            }
             Err(e) => {
                 error!("Failed to activate profile: {:?}", e);
                 Err(e.into())

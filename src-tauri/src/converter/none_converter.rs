@@ -1,5 +1,5 @@
-use tracing::{debug, trace};
 use super::converter::Converter;
+use tracing::{debug, trace};
 
 pub struct NoneConverter;
 
@@ -8,7 +8,7 @@ impl Converter for NoneConverter {
         debug!("Converting with NoneConverter: {}", text);
         Ok(text.to_string())
     }
-    
+
     fn name(&self) -> String {
         trace!("Getting converter name");
         "none".to_string()

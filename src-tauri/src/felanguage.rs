@@ -43,7 +43,10 @@ impl FElanguage {
     }
 
     pub fn j_morph_result(&self, input: &str, request: u32, mode: u32) -> Result<String> {
-        debug!("Calling j_morph_result with input: {}, request: {}, mode: {}", input, request, mode);
+        debug!(
+            "Calling j_morph_result with input: {}, request: {}, mode: {}",
+            input, request, mode
+        );
         let input_utf16: Vec<u16> = input.encode_utf16().chain(Some(0)).collect();
         let input_len = input_utf16.len();
         let input_pcwstr = PCWSTR::from_raw(input_utf16.as_ptr());
@@ -65,17 +68,18 @@ impl FElanguage {
             error!("GetJMorphResult returned null pointer");
             return Err(anyhow::anyhow!("GetJMorphResult returned null pointer"));
         }
-    
+
         let result_struct = unsafe { &*result_ptr };
         let output_bstr_ptr = result_struct.pwchOutput;
         let output_len = result_struct.cchOutput as usize;
-    
+
         if output_bstr_ptr.is_null() {
             error!("Output BSTR pointer is null");
             return Err(anyhow::anyhow!("Output BSTR pointer is null"));
         }
-    
-        let output_slice = unsafe { std::slice::from_raw_parts(output_bstr_ptr.as_ptr(), output_len) };
+
+        let output_slice =
+            unsafe { std::slice::from_raw_parts(output_bstr_ptr.as_ptr(), output_len) };
         let output_string = String::from_utf16_lossy(output_slice);
 
         trace!("j_morph_result output: {}", output_string);

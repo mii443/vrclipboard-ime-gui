@@ -1,6 +1,10 @@
-use crate::{config::Config, converter::converter::{get_custom_converter, Converter}, STATE};
+use crate::{
+    config::Config,
+    converter::converter::{get_custom_converter, Converter},
+    STATE,
+};
 use anyhow::Result;
-use tracing::{info, debug, trace, warn};
+use tracing::{debug, info, trace, warn};
 
 pub struct ConversionBlock {
     pub text: String,
@@ -29,7 +33,12 @@ impl Conversion {
         for (index, block) in blocks.iter().enumerate() {
             trace!("Processing block {}/{}", index + 1, blocks.len());
             let converted = self.convert_block(&block)?;
-            debug!("Converted block - {}: {} -> {}", block.converter.name(), block.text, converted);
+            debug!(
+                "Converted block - {}: {} -> {}",
+                block.converter.name(),
+                block.text,
+                converted
+            );
             result.push_str(&converted);
             trace!("Current result length: {}", result.len());
         }
@@ -56,7 +65,11 @@ impl Conversion {
         let mut current_converter = 'r';
 
         let config = self.get_config();
-        trace!("Config command: {}, split: {}", config.command, config.split);
+        trace!(
+            "Config command: {}, split: {}",
+            config.command,
+            config.split
+        );
 
         if text.starts_with(&config.command) {
             trace!("Text starts with command");
@@ -80,20 +93,30 @@ impl Conversion {
             }
 
             for splitted in command_splitted.split(&config.split) {
-                trace!("Creating ConversionBlock - text: {}, converter: {}", splitted, current_converter);
+                trace!(
+                    "Creating ConversionBlock - text: {}, converter: {}",
+                    splitted,
+                    current_converter
+                );
                 let converter = get_custom_converter(current_converter).unwrap_or_else(|| {
-                    warn!("Failed to get custom converter for '{}', using default", current_converter);
+                    warn!(
+                        "Failed to get custom converter for '{}', using default",
+                        current_converter
+                    );
                     get_custom_converter('n').unwrap()
                 });
                 blocks.push(ConversionBlock {
                     text: splitted.to_string(),
-                    converter
+                    converter,
                 });
             }
         }
 
         debug!("Split text into {} blocks", blocks.len());
-        trace!("Blocks: {:?}", blocks.iter().map(|b| &b.text).collect::<Vec<_>>());
+        trace!(
+            "Blocks: {:?}",
+            blocks.iter().map(|b| &b.text).collect::<Vec<_>>()
+        );
         Ok(blocks)
     }
 

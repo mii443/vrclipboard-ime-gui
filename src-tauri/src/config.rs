@@ -1,21 +1,25 @@
-use std::{fs::File, io::{Read, Write}, path::{Path, PathBuf}};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    path::{Path, PathBuf},
+};
 
+use anyhow::Result;
 use platform_dirs::AppDirs;
 use serde::Serialize;
 use serde_derive::Deserialize;
-use anyhow::Result;
 use tauri::State;
-use tracing::{info, error, debug, trace};
+use tracing::{debug, error, info, trace};
 
 use crate::AppState;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
-    #[serde(default = "semicolon" )]
+    #[serde(default = "semicolon")]
     pub prefix: String,
-    #[serde(default = "slash" )]
+    #[serde(default = "slash")]
     pub split: String,
-    #[serde(default = "semicolon" )]
+    #[serde(default = "semicolon")]
     pub command: String,
     #[serde(default = "bool_true")]
     pub ignore_prefix: bool,
@@ -31,11 +35,11 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { 
-            prefix: ";".to_string(), 
-            split: "/".to_string(), 
-            command: ";".to_string(), 
-            ignore_prefix: true, 
+        Self {
+            prefix: ";".to_string(),
+            split: "/".to_string(),
+            command: ";".to_string(),
+            ignore_prefix: true,
             on_copy_mode: OnCopyMode::ReturnToChatbox,
             skip_url: true,
             use_tsf_reconvert: false,
@@ -45,19 +49,27 @@ impl Default for Config {
 }
 
 #[inline]
-fn slash() -> String { String::from("/") }
+fn slash() -> String {
+    String::from("/")
+}
 #[inline]
-fn semicolon() -> String { String::from(";") }
+fn semicolon() -> String {
+    String::from(";")
+}
 #[inline]
-fn bool_true() -> bool { true }
+fn bool_true() -> bool {
+    true
+}
 #[inline]
-fn bool_false() -> bool { false }
+fn bool_false() -> bool {
+    false
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum OnCopyMode {
     ReturnToClipboard,
     ReturnToChatbox,
-    SendDirectly
+    SendDirectly,
 }
 
 impl Default for OnCopyMode {
@@ -94,10 +106,10 @@ impl Config {
             Ok(file) => file,
             Err(e) => {
                 error!("Failed to create config file: {}", e);
-                return Err(format!("Failed to create config file: {}", e))
-            },
+                return Err(format!("Failed to create config file: {}", e));
+            }
         };
-    
+
         match serde_yaml::to_string(&self) {
             Ok(yaml) => {
                 trace!("Config to be saved: {}", yaml);
@@ -109,11 +121,11 @@ impl Config {
                 *app_config = self.clone();
                 info!("Config saved successfully");
                 Ok(())
-            },
+            }
             Err(e) => {
                 error!("Failed to serialize config: {}", e);
                 Err(format!("Failed to serialize config: {}", e))
-            },
+            }
         }
     }
 

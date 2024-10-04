@@ -1,6 +1,11 @@
+use crate::{
+    converter::{
+        converter::Converter, hiragana::HiraganaConverter, roman_to_kanji::RomanToKanjiConverter,
+    },
+    tsf::{search_candidate_provider::SearchCandidateProvider, set_thread_local_input_settings},
+};
 use anyhow::Result;
-use tracing::{info, debug, error, trace};
-use crate::{converter::{converter::Converter, hiragana::HiraganaConverter, roman_to_kanji::RomanToKanjiConverter}, tsf::{search_candidate_provider::SearchCandidateProvider, set_thread_local_input_settings}};
+use tracing::{debug, error, info, trace};
 
 pub struct TsfConversion {
     pub conversion_history: Vec<String>,
@@ -45,23 +50,48 @@ impl TsfConversion {
 
     fn convert_roman_to_kanji(&mut self, text: &str) -> Result<String> {
         debug!("Converting roman to kanji: {}", text);
-        let o_minus_1 = self.conversion_history.get(if self.conversion_history.len() > 0 { self.conversion_history.len() - 1 } else { 0 }).unwrap_or(&("".to_string())).clone();
+        let o_minus_1 = self
+            .conversion_history
+            .get(if self.conversion_history.len() > 0 {
+                self.conversion_history.len() - 1
+            } else {
+                0
+            })
+            .unwrap_or(&("".to_string()))
+            .clone();
         trace!("Previous conversion (o_minus_1): {}", o_minus_1);
-        let mut first_diff_position = o_minus_1.chars().zip(text.chars()).position(|(a, b)| a != b);
+        let mut first_diff_position = o_minus_1
+            .chars()
+            .zip(text.chars())
+            .position(|(a, b)| a != b);
 
         if o_minus_1 != text && first_diff_position.is_none() {
             first_diff_position = Some(o_minus_1.chars().count());
         }
         trace!("First difference position: {:?}", first_diff_position);
-        let diff = text.chars().skip(first_diff_position.unwrap_or(0)).collect::<String>();
+        let diff = text
+            .chars()
+            .skip(first_diff_position.unwrap_or(0))
+            .collect::<String>();
         debug!("Difference to convert: {}", diff);
 
         let roman_to_kanji_converter = RomanToKanjiConverter;
         let converted = roman_to_kanji_converter.convert(&diff)?;
         trace!("Converted difference: {}", converted);
-        self.conversion_history.push(o_minus_1.chars().zip(text.chars()).take_while(|(a, b)| a == b).map(|(a, _)| a).collect::<String>() + &converted);
+        self.conversion_history.push(
+            o_minus_1
+                .chars()
+                .zip(text.chars())
+                .take_while(|(a, b)| a == b)
+                .map(|(a, _)| a)
+                .collect::<String>()
+                + &converted,
+        );
         self.clipboard_history.push(text.to_string());
-        info!("Roman to kanji conversion result: {}", self.conversion_history.last().unwrap());
+        info!(
+            "Roman to kanji conversion result: {}",
+            self.conversion_history.last().unwrap()
+        );
         trace!("Updated conversion history: {:?}", self.conversion_history);
         trace!("Updated clipboard history: {:?}", self.clipboard_history);
         Ok(self.conversion_history.last().unwrap().clone())
@@ -73,26 +103,56 @@ impl TsfConversion {
         let mut diff_hiragana = String::new();
         let mut diff = String::new();
         if self.reconversion_prefix.is_none() {
-            let o_minus_2 = self.conversion_history.get(if self.conversion_history.len() > 1 { self.conversion_history.len() - 2 } else { 0 }).unwrap_or(&("".to_string())).clone();
-            let i_minus_1 = self.clipboard_history.get(if self.clipboard_history.len() > 0 { self.clipboard_history.len() - 1 } else { 0 }).unwrap_or(&("".to_string())).clone();
+            let o_minus_2 = self
+                .conversion_history
+                .get(if self.conversion_history.len() > 1 {
+                    self.conversion_history.len() - 2
+                } else {
+                    0
+                })
+                .unwrap_or(&("".to_string()))
+                .clone();
+            let i_minus_1 = self
+                .clipboard_history
+                .get(if self.clipboard_history.len() > 0 {
+                    self.clipboard_history.len() - 1
+                } else {
+                    0
+                })
+                .unwrap_or(&("".to_string()))
+                .clone();
             trace!("o_minus_2: {}, i_minus_1: {}", o_minus_2, i_minus_1);
-            let mut first_diff_position = i_minus_1.chars().zip(o_minus_2.chars()).position(|(a, b)| a != b);
+            let mut first_diff_position = i_minus_1
+                .chars()
+                .zip(o_minus_2.chars())
+                .position(|(a, b)| a != b);
             trace!("First difference position: {:?}", first_diff_position);
             if o_minus_2 != i_minus_1 && first_diff_position.is_none() {
                 first_diff_position = Some(o_minus_2.chars().count());
             }
-            diff = i_minus_1.chars().skip(first_diff_position.unwrap_or(0)).collect::<String>();
+            diff = i_minus_1
+                .chars()
+                .skip(first_diff_position.unwrap_or(0))
+                .collect::<String>();
             debug!("Difference to convert: {}", diff);
             diff_hiragana = HiraganaConverter.convert(&diff)?;
             trace!("Hiragana conversion: {}", diff_hiragana);
-            let prefix = i_minus_1.chars().zip(o_minus_2.chars()).take_while(|(a, b)| a == b).map(|(a, _)| a).collect::<String>();
+            let prefix = i_minus_1
+                .chars()
+                .zip(o_minus_2.chars())
+                .take_while(|(a, b)| a == b)
+                .map(|(a, _)| a)
+                .collect::<String>();
             self.reconversion_prefix = Some(prefix.clone());
             trace!("Set reconversion prefix: {:?}", self.reconversion_prefix);
         }
 
         let candidates = self.reconversion_candidates.get_or_insert_with(|| {
             debug!("Generating new candidates");
-            let mut candidates = self.search_candidate_provider.get_candidates(&diff_hiragana, 10).unwrap_or_default();
+            let mut candidates = self
+                .search_candidate_provider
+                .get_candidates(&diff_hiragana, 10)
+                .unwrap_or_default();
             trace!("Initial candidates: {:?}", candidates);
             if candidates.is_empty() {
                 candidates.push(diff_hiragana.clone());
@@ -115,7 +175,12 @@ impl TsfConversion {
         }
         debug!("Updated reconversion index: {}", index);
 
-        self.conversion_history.push(self.reconversion_prefix.clone().unwrap() + &self.reconversion_candidates.as_ref().unwrap()[self.reconversion_index.unwrap() as usize].clone());
+        self.conversion_history.push(
+            self.reconversion_prefix.clone().unwrap()
+                + &self.reconversion_candidates.as_ref().unwrap()
+                    [self.reconversion_index.unwrap() as usize]
+                    .clone(),
+        );
         self.clipboard_history.push(text.to_string());
         trace!("Updated conversion history: {:?}", self.conversion_history);
         trace!("Updated clipboard history: {:?}", self.clipboard_history);
@@ -129,7 +194,10 @@ impl TsfConversion {
         trace!("Trimmed conversion history: {:?}", self.conversion_history);
         trace!("Trimmed clipboard history: {:?}", self.clipboard_history);
 
-        info!("TSF conversion result: {}", self.conversion_history.last().unwrap());
+        info!(
+            "TSF conversion result: {}",
+            self.conversion_history.last().unwrap()
+        );
         Ok(self.conversion_history.last().unwrap().clone())
     }
 
@@ -137,7 +205,12 @@ impl TsfConversion {
         debug!("Starting conversion for: {}", text);
         trace!("Current conversion history: {:?}", self.conversion_history);
         trace!("Current clipboard history: {:?}", self.clipboard_history);
-        let same_as_last_conversion = text.to_string() == self.conversion_history.last().unwrap_or(&("".to_string())).clone();
+        let same_as_last_conversion = text.to_string()
+            == self
+                .conversion_history
+                .last()
+                .unwrap_or(&("".to_string()))
+                .clone();
         trace!("Same as last conversion: {}", same_as_last_conversion);
 
         self.target_text = text.to_string();
